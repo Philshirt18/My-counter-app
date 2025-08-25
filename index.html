@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi Counter App</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+
+```
+    input {
+        font-size: 16px;
+    }
+    
+    .tap-button {
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    @media (display-mode: standalone) {
+        body {
+            padding-top: env(safe-area-inset-top);
+        }
+    }
+</style>
+```
+
+</head>
+<body>
+    <div id="root"></div>
+
+```
+<script type="text/babel">
+    const { useState } = React;
+
+    function MultipleCounterApp() {
+        const [counters, setCounters] = useState([]);
+        const [newHeadline, setNewHeadline] = useState('');
+        const [newValue, setNewValue] = useState('');
+        const [motivationMessage, setMotivationMessage] = useState('');
+
+        const motivationalMessages = [
+            "Awesome", "Well done", "Great job", "Excellent", "Fantastic", "Brilliant", 
+            "Amazing", "Superb", "Outstanding", "Impressive", "Incredible", "Nice work", 
+            "Perfect", "Wonderful", "Top-notch", "Phenomenal", "Way to go", "Keep it up", 
+            "Excellent effort", "Stellar", "Terrific", "Fabulous", "Exceptional", 
+            "Magnificent", "You nailed it", "Fantastic work", "Bravo", "Great effort", 
+            "Splendid", "You rock", "Marvelous", "You did it", "Legendary", 
+            "Strong work", "You've got this", "Champion", "Keep shining", "Great going", 
+            "You're amazing", "Keep crushing it", "Brilliant effort"
+        ];
+
+        const addCounter = () => {
+            if (newHeadline.trim() === '') return;
+            
+            const value = parseFloat(newValue) || 0;
+            
+            const newCounter = {
+                id: Date.now(),
+                headline: newHeadline,
+                count: 0,
+                value: value,
+                total: 0
+            };
+            
+            setCounters([...counters, newCounter]);
+            setNewHeadline('');
+            setNewValue('');
+        };
+
+        const incrementCounter = (id) => {
+            const randomMessage = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+            setMotivationMessage(randomMessage);
+            
+            setTimeout(() => {
+                setMotivationMessage('');
+            }, 1500);
+            
+            setCounters(counters.map(counter => 
+                counter.id === id 
+                    ? { 
+                        ...counter, 
+                        count: counter.count + 1,
+                        total: counter.total + counter.value 
+                      }
+                    : counter
+            ));
+        };
+
+        const decrementCounter = (id) => {
+            setCounters(counters.map(counter => 
+                counter.id === id && counter.count > 0
+                    ? { 
+                        ...counter, 
+                        count: counter.count - 1,
+                        total: counter.total - counter.value 
+                      }
+                    : counter
+            ));
+        };
+
+        const resetCounter = (id) => {
+            setCounters(counters.map(counter => 
+                counter.id === id 
+                    ? { ...counter, count: 0, total: 0 }
+                    : counter
+            ));
+        };
+
+        const deleteCounter = (id) => {
+            setCounters(counters.filter(counter => counter.id !== id));
+        };
+
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat('de-DE', {
+                style: 'currency',
+                currency: 'EUR',
+                minimumFractionDigits: 2
+            }).format(amount);
+        };
+
+        const grandTotal = counters.reduce((sum, counter) => sum + counter.total, 0);
+
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-pink-400 via-yellow-300 to-orange-400 p-4 relative">
+                
+                {/* Motivational Pop-up */}
+                {motivationMessage && (
+                    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40 pointer-events-none">
+                        <div className="bg-white rounded-3xl px-8 py-6 shadow-2xl border-4 border-yellow-400 transform scale-110">
+                            <div className="text-3xl font-bold text-center text-green-600">
+                                🎉 {motivationMessage}! 🎉
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className="max-w-md mx-auto">
+                    
+                    {/* Header */}
+                    <div className="text-center mb-6">
+                        <h1 className="text-3xl font-bold text-white mb-2">Multi Counter App</h1>
+                        <div className="w-20 h-1 bg-white mx-auto rounded opacity-80"></div>
+                    </div>
+
+                    {/* Grand Total Display */}
+                    {counters.length > 0 && (
+                        <div className="bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl shadow-xl p-6 mb-6 text-center">
+                            <div className="text-lg font-semibold text-white mb-1">🎉 Grand Total 🎉</div>
+                            <div className="text-3xl font-bold text-white">{formatCurrency(grandTotal)}</div>
+                            <div className="text-sm text-green-100 mt-1">
+                                {counters.reduce((sum, counter) => sum + counter.count, 0)} total taps
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Add New Counter Section */}
+                    <div className="bg-white rounded-2xl shadow-xl p-6 mb-6 border-2 border-yellow-200">
+                        <h2 className="text-lg font-bold text-gray-800 mb-4">✨ Create New Counter ✨</h2>
+                        
+                        <div className="mb-4">
+                            <label className="block text-gray-700 font-semibold mb-2">Headline:</label>
+                            <input
+                                type="text"
+                                value={newHeadline}
+                                onChange={(e) => setNewHeadline(e.target.value)}
+                                placeholder="e.g., Coffee Purchase, Savings Goal..."
+                                className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none"
+                            />
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block text-gray-700 font-semibold mb-2">Value per tap (€):</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={newValue}
+                                onChange={(e) => setNewValue(e.target.value)}
+                                placeholder="e.g., 5.00, 2.50, 10.00..."
+                                className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none"
+                            />
+                        </div>
+                        
+                        <button
+                            onClick={addCounter}
+                            disabled={!newHeadline.trim()}
+                            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
+                        >
+                            🌟 Add Counter 🌟
+                        </button>
+                    </div>
+
+                    {/* Counters List */}
+                    {counters.length === 0 ? (
+                        <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+                            <div className="text-gray-400 text-lg mb-2">No counters yet</div>
+                            <div className="text-gray-500 text-sm">Create your first counter above!</div>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {counters.map((counter) => (
+                                <div key={counter.id} className="bg-white rounded-2xl shadow-xl p-6">
+                                    
+                                    {/* Counter Header */}
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="flex-1 mr-2">
+                                            <h3 className="text-lg font-bold text-gray-800">
+                                                {counter.headline}
+                                            </h3>
+                                            <div className="text-sm text-gray-600">
+                                                {formatCurrency(counter.value)} per tap
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => deleteCounter(counter.id)}
+                                            className="text-red-500 hover:text-red-700 text-xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 transition-colors duration-200"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+
+                                    {/* Counter Display */}
+                                    <div className="grid grid-cols-2 gap-3 mb-4">
+                                        <div className="bg-gradient-to-r from-cyan-400 to-blue-500 text-white rounded-xl p-3 text-center shadow-lg">
+                                            <div className="text-2xl font-bold mb-1">{counter.count}</div>
+                                            <div className="text-xs opacity-90">Taps</div>
+                                        </div>
+                                        <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-xl p-3 text-center shadow-lg">
+                                            <div className="text-lg font-bold mb-1">{formatCurrency(counter.total)}</div>
+                                            <div className="text-xs opacity-90">Total</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Counter Buttons */}
+                                    <div className="flex space-x-2">
+                                        <button
+                                            onClick={() => incrementCounter(counter.id)}
+                                            className="flex-1 bg-gradient-to-r from-lime-400 to-green-500 hover:from-lime-500 hover:to-green-600 active:from-lime-600 active:to-green-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-150 hover:scale-[1.02] active:scale-95 shadow-lg"
+                                        >
+                                            ➕ {formatCurrency(counter.value)}
+                                        </button>
+                                        <button
+                                            onClick={() => decrementCounter(counter.id)}
+                                            disabled={counter.count === 0}
+                                            className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-3 rounded-xl transition-all duration-150 text-sm shadow-lg"
+                                        >
+                                            ↩️ UNDO
+                                        </button>
+                                        <button
+                                            onClick={() => resetCounter(counter.id)}
+                                            className="bg-gradient-to-r from-pink-400 to-red-500 hover:from-pink-500 hover:to-red-600 text-white font-semibold py-3 px-3 rounded-xl text-sm transition-all duration-200 shadow-lg"
+                                        >
+                                            🔄 Reset
+                                        </button>
+                                    </div>
+
+                                    {/* Show motivation message right below the buttons for this counter */}
+                                    {motivationMessage && (
+                                        <div className="mt-4 bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-xl p-3 text-center">
+                                            <div className="text-xl font-bold">
+                                                🎉 {motivationMessage}! 🎉
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Footer */}
+                    <div className="text-center mt-8 text-white text-sm opacity-80">
+                        Built with ❤️ for myself • {counters.length} counter{counters.length !== 1 ? 's' : ''} active
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    ReactDOM.render(<MultipleCounterApp />, document.getElementById('root'));
+</script>
+```
+
+</body>
+</html>
